@@ -1,10 +1,10 @@
 use clap::Parser;
 
-mod routes;
+mod db;
 mod models;
+mod routes;
 mod seed;
 mod server;
-mod db;
 mod utils;
 
 #[derive(Parser)]

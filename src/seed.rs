@@ -1,6 +1,6 @@
 use csv::Reader;
 
-use crate::{models, db::connect_to_db, utils::parse_str_to_opt};
+use crate::{db::connect_to_db, models, utils::parse_str_to_opt};
 
 pub async fn seed_db(path_to_seed_file: &str) {
     println!("Seeding from file {}", path_to_seed_file);

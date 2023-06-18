@@ -1,8 +1,11 @@
 use std::net::SocketAddr;
 
-use axum::{Router, routing::get};
+use axum::{routing::get, Router};
 
-use crate::{routes::{root, get_random_city}, db::connect_to_db};
+use crate::{
+    db::connect_to_db,
+    routes::{get_random_city, get_cities, root},
+};
 
 pub async fn run_server() {
     let pool = connect_to_db().await;
@@ -11,6 +14,7 @@ pub async fn run_server() {
     let app = Router::new()
         .route("/", get(root))
         .route("/rand", get(get_random_city))
+        .route("/cities", get(get_cities))
         .with_state(pool);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
