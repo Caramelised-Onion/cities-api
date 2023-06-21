@@ -17,6 +17,6 @@ pub struct City {
 
 impl City {
     pub fn wkt(&self) -> String {
-        format!("POINT({} {})", self.lat, self.lng)
+        format!("POINT({} {})", self.lng, self.lat)
     }
 }
