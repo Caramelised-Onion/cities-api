@@ -2,6 +2,7 @@ use clap::Parser;
 
 mod db;
 mod models;
+mod query_builder;
 mod routes;
 mod seed;
 mod server;

@@ -4,7 +4,7 @@ use axum::{routing::get, Router};
 
 use crate::{
     db::connect_to_db,
-    routes::{get_random_city, get_cities, root, get_distance},
+    routes::{get_cities, get_distance, get_random_city, root},
 };
 
 pub async fn run_server() {
