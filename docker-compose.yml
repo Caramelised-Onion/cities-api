@@ -1,0 +1,16 @@
+services:
+  postgresqls:
+    container_name: "postgresqlpostgis"
+    image: "postgis/postgis"
+    ports: 
+      - "5431:5432"
+    volumes:
+       - db_persdata:/var/lib/postgrespers
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+    networks:
+      - default
+
+volumes:
+  db_persdata : {}
