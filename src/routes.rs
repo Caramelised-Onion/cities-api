@@ -43,17 +43,14 @@ pub struct QueriesParams {
     country: Option<String>,
     radius: Option<i32>,
     point: Option<String>,
+    sort_by_random: Option<bool>,
     sort_by_distance: Option<bool>,
     sort_by_population: Option<bool>,
+    minimum_population: Option<i32>,
 }
 
-pub fn keyword_helper(desired_query: &str) -> &str {
-    if desired_query.contains("WHERE") {
-        " AND"
-    } else {
-        " WHERE"
-    }
-}
+
+// http://localhost:3000/cities?point=POINT(-0.1276%2051.5074)&radius=2500000&sort_by_random=true&minimum_population=500000
 
 pub async fn get_cities(
     State(pool): State<PgPool>,
@@ -68,15 +65,24 @@ pub async fn get_cities(
         query_conditions.push(format!("(iso3='{val}' or iso2='{val}')"));
     }
 
+    if let Some(min_pop) = query.minimum_population {
+        query_conditions.push(format!("population >= {min_pop}"));
+    }
+    
+
     if let (Some(radius), Some(point)) = (query.radius, query.point) {
         query_conditions.push(format!("ST_DWithin(coords::geography, ST_GeomFromEWKT('SRID=4326;{}')::geography, {})", point, radius));
     }
 
-    if let Some(sort_by_population) = query.sort_by_population {
+    if query.sort_by_random.is_some() {
+        query_order.push("RANDOM()".to_string());
+    }
+
+    if query.sort_by_population.is_some() {
         query_order.push("population".to_string());
     }
 
-    if let Some(sort_by_distance) = query.sort_by_distance {
+    if query.sort_by_distance.is_some() {
         query_columns.push("ST_Distancespheroid(coords, ST_GeomFromEWKT('SRID=4326;POINT(4.0 42.0)')) AS distance_from".to_string());
         query_order.push("distance_from".to_string());
     }
