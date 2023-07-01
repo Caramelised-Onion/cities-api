@@ -1,6 +1,12 @@
 use clap::Parser;
 
-use cities_api::{seed, server};
+mod seed;
+mod db;
+mod query_builder;
+mod server;
+mod utils;
+mod routes;
+
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]

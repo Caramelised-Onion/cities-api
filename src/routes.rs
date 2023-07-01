@@ -4,9 +4,10 @@ use axum::extract::{Query, State};
 use axum::response::Json;
 use sqlx::{PgPool, Row};
 
-use crate::models::City;
+use cities_common::models::City;
 use crate::query_builder::SqlQuery;
-use serde::Deserialize;
+use cities_common::queries::{CitiesQuery, DistQuery};
+
 
 const CITIES_QUERY: &str = "SELECT city AS name, city_ascii AS name_ascii, ST_X(coords) as lat, ST_Y(coords) AS lng, country, iso2, iso3, admin_name, capital, population, id FROM cities";
 const COLUMNS: &[&str] = &[
@@ -38,23 +39,14 @@ pub async fn get_random_city(State(pool): State<PgPool>) -> Json<City> {
 
 // http://127.0.0.1:3000/cities?country=ES
 
-#[derive(Debug, Deserialize)]
-pub struct QueriesParams {
-    country: Option<String>,
-    radius: Option<i32>,
-    point: Option<String>,
-    sort_by_random: Option<bool>,
-    sort_by_distance: Option<bool>,
-    sort_by_population: Option<bool>,
-    minimum_population: Option<i32>,
-}
+
 
 
 // http://localhost:3000/cities?point=POINT(-0.1276%2051.5074)&radius=2500000&sort_by_random=true&minimum_population=500000
 
 pub async fn get_cities(
     State(pool): State<PgPool>,
-    Query(query): Query<QueriesParams>,
+    Query(query): Query<CitiesQuery>,
 ) -> Json<Vec<City>> 
 {
     let mut query_conditions: Vec<String> = vec![];
@@ -92,7 +84,7 @@ pub async fn get_cities(
         table_name: "cities".to_string(),
         conditions: query_conditions,
         order_by: query_order,
-        limit: Some(100),
+        limit: Some(2),
     }.get_query();
 
     println!("{}", query);
@@ -103,17 +95,13 @@ pub async fn get_cities(
     Json(v)
 }
 
-#[derive(Debug, Deserialize)]
-pub struct DistQueryParams {
-    city_id1: i64,
-    city_id2: i64,
-}
+
 
 // http://127.0.0.1:3000/distance?city_id1=1&city_id2=2
 
 pub async fn get_distance(
     State(pool): State<PgPool>,
-    Query(query): Query<DistQueryParams>,
+    Query(query): Query<DistQuery>,
 ) -> Json<f64> {
     let v: Result<f64, sqlx::Error> = sqlx::query(&format!("SELECT ST_DISTANCESPHEROID(a.coords, b.coords) FROM cities a, cities b WHERE a.id={} AND b.id={}", query.city_id1, query.city_id2))
                         .fetch_one(&pool)

@@ -5,12 +5,6 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-
-
-[lib]
-path = "src/lib.rs"
-name = "cities_api"
-
 [dependencies]
 axum = { version = "0.6.18", features = ["json"]}
 serde = { version = "1.0", features = ["derive"] }
@@ -23,3 +17,5 @@ anyhow = "1.0.51"
 sqlx = { version = "0.6.3", features = [  "runtime-tokio-rustls", "postgres", "macros" ]}
 dotenv = "0.15.0"
 csv = "1.2.2"
+tower-http = {version = "0.4.1", features=["cors"]}
+cities-common = { path = "../cities-common", features=["sqlxrow"]}
