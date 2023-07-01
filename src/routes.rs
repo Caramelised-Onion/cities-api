@@ -84,7 +84,7 @@ pub async fn get_cities(
         table_name: "cities".to_string(),
         conditions: query_conditions,
         order_by: query_order,
-        limit: Some(2),
+        limit: query.limit,
     }.get_query();
 
     println!("{}", query);

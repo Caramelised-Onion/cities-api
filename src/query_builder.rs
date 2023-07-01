@@ -4,7 +4,7 @@ pub struct SqlQuery {
     pub table_name: String,
     pub conditions: Vec<String>,
     pub order_by: Vec<String>,
-    pub limit: Option<u32>,
+    pub limit: Option<usize>,
 }
 
 impl SqlQuery {
