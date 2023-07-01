@@ -29,18 +29,18 @@ impl SqlQuery {
         Some(format!("ORDER BY {}", joined_order))
     }
     fn get_limit_portion(&self) -> Option<String> {
-        match self.limit {
-            Some(val) => Some(format!("LIMIT {val}")),
-            None => None,
-        }
+        self.limit.map(|val| format!("LIMIT {val}"))
     }
     pub fn get_query(&self) -> String {
         let mut res: Vec<String> = vec![self.get_select_portion()];
 
-        for item in vec![self.get_conditions_portion(), self.get_order_by_portion(), self.get_limit_portion()] {
-            match item {
-                Some(item_string) => res.push(item_string),
-                None => (),
+        for item in vec![
+            self.get_conditions_portion(),
+            self.get_order_by_portion(),
+            self.get_limit_portion(),
+        ] {
+            if let Some(item_string) = item {
+                res.push(item_string)
             }
         }
         res.join(" ") + ";"
@@ -48,7 +48,7 @@ impl SqlQuery {
 }
 
 mod test {
-    use super::*;
+    use crate::query_builder::SqlQuery;
 
     #[test]
     fn test_get_select_portion() {
@@ -78,7 +78,7 @@ mod test {
 
         assert_eq!(
             res,
-            "SELECT column1, column2 FROM my_table_name WHERE column3 = 'value' AND column4 > 10"
+            "SELECT column1, column2 FROM my_table_name WHERE column3 = 'value' AND column4 > 10;"
         );
     }
 
@@ -96,9 +96,7 @@ mod test {
 
         assert_eq!(
             res,
-            "SELECT column1, column2 FROM my_table_name WHERE column3 = 'value' AND column4 > 10 ORDER BY population, name LIMIT 20"
+            "SELECT column1, column2 FROM my_table_name WHERE column3 = 'value' AND column4 > 10 ORDER BY population, name LIMIT 20;"
         );
     }
-
-
 }

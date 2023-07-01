@@ -1,8 +1,8 @@
 use std::net::SocketAddr;
 
-use axum::{routing::get, Router, http};
-use tower_http::cors::{Any, CorsLayer};
+use axum::{http, routing::get, Router};
 use http::Method;
+use tower_http::cors::{Any, CorsLayer};
 
 use crate::{
     db::connect_to_db,
@@ -11,7 +11,9 @@ use crate::{
 
 pub async fn run_server() {
     let pool = connect_to_db().await;
-    let cors = CorsLayer::new().allow_methods([Method::GET]).allow_origin(Any);
+    let cors = CorsLayer::new()
+        .allow_methods([Method::GET])
+        .allow_origin(Any);
 
     // build our application with a route
     let app = Router::new()
