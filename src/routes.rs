@@ -6,7 +6,7 @@ use sqlx::{PgPool, Row};
 
 use crate::query_builder::SqlQuery;
 use cities_common::models::City;
-use cities_common::queries::{CitiesQuery, DistQuery};
+use cities_common::queries::{CitiesQuery, DistQuery, SortOrder};
 
 const CITIES_QUERY: &str = "SELECT city AS name, city_ascii AS name_ascii, ST_X(coords) as lat, ST_Y(coords) AS lng, country, iso2, iso3, admin_name, capital, population, id FROM cities";
 const COLUMNS: &[&str] = &[
@@ -66,13 +66,11 @@ pub async fn get_cities(
         query_order.push("RANDOM()".to_string());
     }
 
-    if query.sort_by_population.is_some() {
-        query_order.push("population".to_string());
-    }
-
-    if query.sort_by_distance.is_some() {
-        query_columns.push("ST_Distancespheroid(coords, ST_GeomFromEWKT('SRID=4326;POINT(4.0 42.0)')) AS distance_from".to_string());
-        query_order.push("distance_from".to_string());
+    if let Some(sort_order) = query.sort_by_population {
+        match sort_order {
+            SortOrder::ASC => query_order.push("population ASC".to_string()),
+            SortOrder::DESC => query_order.push("population DESC".to_string()),
+        }
     }
 
     let query = SqlQuery {
