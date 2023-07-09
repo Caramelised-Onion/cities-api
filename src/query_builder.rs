@@ -8,6 +8,21 @@ pub struct SqlQuery {
 }
 
 impl SqlQuery {
+    pub fn get_query(&self) -> String {
+        let mut res: Vec<String> = vec![self.get_select_portion()];
+
+        for item in vec![
+            self.get_conditions_portion(),
+            self.get_order_by_portion(),
+            self.get_limit_portion(),
+        ] {
+            if let Some(item_string) = item {
+                res.push(item_string)
+            }
+        }
+        res.join(" ") + ";"
+    }
+
     fn get_select_portion(&self) -> String {
         let joined_columns = self.columns.join(", ");
         format!("SELECT {} FROM {}", joined_columns, &self.table_name)
@@ -28,25 +43,13 @@ impl SqlQuery {
         let joined_order = self.order_by.join(", ");
         Some(format!("ORDER BY {}", joined_order))
     }
+
     fn get_limit_portion(&self) -> Option<String> {
         self.limit.map(|val| format!("LIMIT {val}"))
     }
-    pub fn get_query(&self) -> String {
-        let mut res: Vec<String> = vec![self.get_select_portion()];
-
-        for item in vec![
-            self.get_conditions_portion(),
-            self.get_order_by_portion(),
-            self.get_limit_portion(),
-        ] {
-            if let Some(item_string) = item {
-                res.push(item_string)
-            }
-        }
-        res.join(" ") + ";"
-    }
 }
 
+#[cfg(test)]
 mod test {
     use crate::query_builder::SqlQuery;
 
