@@ -5,6 +5,7 @@ use axum::response::Json;
 use sqlx::{PgPool, Row};
 
 use crate::query_builder::SqlQuery;
+use crate::utils::postgres_query_param;
 use cities_common::models::City;
 use cities_common::queries::{CitiesQuery, DistQuery, SortOrder};
 
@@ -22,6 +23,7 @@ const COLUMNS: &[&str] = &[
     "population",
     "id",
 ];
+const SRID_SPECIFICATION: &str = "SRID=4326;";
 
 pub async fn root() -> &'static str {
     "Hello, World!"
@@ -45,10 +47,16 @@ pub async fn get_cities(
 ) -> Json<Vec<City>> {
     let mut query_conditions: Vec<String> = vec![];
     let mut query_order: Vec<String> = vec![];
-    let mut query_columns: Vec<String> = COLUMNS.iter().map(|s| s.to_string()).collect();
+    let query_columns: Vec<String> = COLUMNS.iter().map(|s| s.to_string()).collect();
+    let mut bind_vals: Vec<String> = vec![];
 
     if let Some(val) = query.country {
-        query_conditions.push(format!("(iso3='{val}' or iso2='{val}')"));
+        let p1 = postgres_query_param(bind_vals.len() + 1);
+        let p2 = postgres_query_param(bind_vals.len() + 2);
+        query_conditions.push(format!("(iso3={p1} or iso2={p2})"));
+        for _ in 0..2 {
+            bind_vals.push(val.clone());
+        }
     }
 
     if let Some(min_pop) = query.minimum_population {
@@ -56,10 +64,12 @@ pub async fn get_cities(
     }
 
     if let (Some(radius), Some(point)) = (query.radius, query.point) {
+        let p = postgres_query_param(bind_vals.len() + 1);
         query_conditions.push(format!(
-            "ST_DWithin(coords::geography, ST_GeomFromEWKT('SRID=4326;{}')::geography, {})",
-            point, radius
+            "ST_DWithin(coords::geography, ST_GeomFromEWKT({})::geography, {})",
+            p, radius
         ));
+        bind_vals.push(format!("{}{}", SRID_SPECIFICATION, point));
     }
 
     if query.sort_by_random.is_some() {
@@ -83,7 +93,13 @@ pub async fn get_cities(
     .get_query();
 
     println!("{}", query);
-    let v: Vec<City> = sqlx::query_as(&query).fetch_all(&pool).await.unwrap();
+
+    let mut sqlx_query = sqlx::query_as(&query);
+    for bind_val in bind_vals {
+        sqlx_query = sqlx_query.bind(bind_val);
+    }
+    let v: Vec<City> = sqlx_query
+        .fetch_all(&pool).await.unwrap();
     Json(v)
 }
 
