@@ -244,6 +244,7 @@ dependencies = [
  "dotenv",
  "serde",
  "serde_json",
+ "simple-query-builder",
  "sqlx",
  "tokio",
  "tower-http",
@@ -1261,6 +1262,10 @@ checksum = "d8229b473baa5980ac72ef434c4415e70c4b5e71b423043adb4ba059f89c99a1"
 dependencies = [
  "libc",
 ]
+
+[[package]]
+name = "simple-query-builder"
+version = "0.1.0"
 
 [[package]]
 name = "smallvec"

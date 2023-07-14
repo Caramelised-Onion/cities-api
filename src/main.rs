@@ -1,7 +1,6 @@
 use clap::Parser;
 
 mod db;
-mod query_builder;
 mod routes;
 mod seed;
 mod server;
