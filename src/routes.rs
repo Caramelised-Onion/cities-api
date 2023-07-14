@@ -2,9 +2,9 @@ use std::vec;
 
 use axum::extract::{Query, State};
 use axum::response::Json;
+use simple_query_builder::SqlQuery;
 use sqlx::{PgPool, Row};
 
-use crate::query_builder::SqlQuery;
 use crate::utils::postgres_query_param;
 use cities_common::models::City;
 use cities_common::queries::{CitiesQuery, DistQuery, SortOrder};
@@ -98,8 +98,7 @@ pub async fn get_cities(
     for bind_val in bind_vals {
         sqlx_query = sqlx_query.bind(bind_val);
     }
-    let v: Vec<City> = sqlx_query
-        .fetch_all(&pool).await.unwrap();
+    let v: Vec<City> = sqlx_query.fetch_all(&pool).await.unwrap();
     Json(v)
 }
 
