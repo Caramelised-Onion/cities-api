@@ -23,6 +23,7 @@ const COLUMNS: &[&str] = &[
     "population",
     "id",
 ];
+const SRID_SPECIFICATION: &str = "SRID=4326;";
 
 pub async fn root() -> &'static str {
     "Hello, World!"
@@ -63,13 +64,12 @@ pub async fn get_cities(
     }
 
     if let (Some(radius), Some(point)) = (query.radius, query.point) {
-
         let p = postgres_query_param(bind_vals.len() + 1);
         query_conditions.push(format!(
-            "ST_DWithin(coords::geography, ST_GeomFromEWKT('SRID=4326;{}')::geography, {})",
+            "ST_DWithin(coords::geography, ST_GeomFromEWKT({})::geography, {})",
             p, radius
         ));
-        bind_vals.push(point);
+        bind_vals.push(format!("{}{}", SRID_SPECIFICATION, point));
     }
 
     if query.sort_by_random.is_some() {
@@ -96,7 +96,6 @@ pub async fn get_cities(
 
     let mut sqlx_query = sqlx::query_as(&query);
     for bind_val in bind_vals {
-        println!("bind val: {}", bind_val);
         sqlx_query = sqlx_query.bind(bind_val);
     }
     let v: Vec<City> = sqlx_query
