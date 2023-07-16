@@ -6,7 +6,7 @@ use tower_http::cors::{Any, CorsLayer};
 
 use crate::{
     db::connect_to_db,
-    routes::{get_cities, get_distance, get_random_city, root},
+    routes::{get_cities, get_distance, get_random_city, root, get_country},
 };
 
 pub async fn run_server() {
@@ -21,6 +21,7 @@ pub async fn run_server() {
         .route("/rand", get(get_random_city))
         .route("/cities", get(get_cities))
         .route("/distance", get(get_distance))
+        .route("/countries", get(get_country))
         .layer(cors)
         .with_state(pool);
 

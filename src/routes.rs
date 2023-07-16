@@ -6,11 +6,11 @@ use simple_query_builder::SqlQuery;
 use sqlx::{PgPool, Row};
 
 use crate::utils::postgres_query_param;
-use cities_common::models::City;
-use cities_common::queries::{CitiesQuery, DistQuery, SortOrder};
+use cities_common::models::{City, Country};
+use cities_common::queries::{CitiesQuery, DistQuery, CountryQuery, SortOrder};
 
 const CITIES_QUERY: &str = "SELECT city AS name, city_ascii AS name_ascii, ST_X(coords) as lng, ST_Y(coords) AS lat, country, iso2, iso3, admin_name, capital, population, id FROM cities";
-const COLUMNS: &[&str] = &[
+const CITIES_COLUMNS: &[&str] = &[
     "city AS name",
     "city_ascii AS name_ascii",
     "ST_X(coords) as lng",
@@ -22,6 +22,13 @@ const COLUMNS: &[&str] = &[
     "capital",
     "population",
     "id",
+];
+const COUNTRIES_COLUMNS: &[&str] = &[
+    "name",
+    "iso2",
+    "iso3",
+    "ST_AsText(geom) AS geom_wkt",
+    "gid",
 ];
 const SRID_SPECIFICATION: &str = "SRID=4326;";
 
@@ -38,16 +45,14 @@ pub async fn get_random_city(State(pool): State<PgPool>) -> Json<City> {
 }
 
 // http://127.0.0.1:3000/cities?country=ES
-
 // http://localhost:3000/cities?point=POINT(-0.1276%2051.5074)&radius=2500000&sort_by_random=true&minimum_population=500000
-
 pub async fn get_cities(
     State(pool): State<PgPool>,
     Query(query): Query<CitiesQuery>,
 ) -> Json<Vec<City>> {
     let mut query_conditions: Vec<String> = vec![];
     let mut query_order: Vec<String> = vec![];
-    let query_columns: Vec<String> = COLUMNS.iter().map(|s| s.to_string()).collect();
+    let query_columns: Vec<String> = CITIES_COLUMNS.iter().map(|s| s.to_string()).collect();
     let mut bind_vals: Vec<String> = vec![];
 
     if let Some(val) = query.country {
@@ -111,4 +116,40 @@ pub async fn get_distance(State(pool): State<PgPool>, Query(query): Query<DistQu
                         .unwrap().try_get("st_distancespheroid");
 
     Json(v.unwrap())
+}
+
+pub async fn get_country(
+    State(pool): State<PgPool>,
+    Query(query): Query<CountryQuery>,
+) -> Json<Country> {
+    let mut query_conditions: Vec<String> = vec![];
+    let mut bind_vals: Vec<String> = vec![];
+    let query_columns: Vec<String> = COUNTRIES_COLUMNS.iter().map(|s| s.to_string()).collect();
+
+    if let Some(country_code) = query.country_code {
+        let p1 = postgres_query_param(bind_vals.len() + 1);
+        let p2 = postgres_query_param(bind_vals.len() + 2);
+        query_conditions.push(format!("(iso3={p1} or iso2={p2})"));
+        for _ in 0..2 {
+            bind_vals.push(country_code.clone());
+        }
+    }
+
+    let query = SqlQuery {
+        columns: query_columns,
+        table_name: "countries".to_string(),
+        conditions: query_conditions,
+        order_by: vec![],
+        limit: None,
+    }
+    .get_query();
+
+    println!("{}", query);
+
+    let mut sqlx_query = sqlx::query_as(&query);
+    for bind_val in bind_vals {
+        sqlx_query = sqlx_query.bind(bind_val);
+    }
+    let v: Country = sqlx_query.fetch_one(&pool).await.unwrap();
+    Json(v)
 }
