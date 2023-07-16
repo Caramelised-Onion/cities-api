@@ -9,12 +9,12 @@ use crate::utils::postgres_query_param;
 use cities_common::models::City;
 use cities_common::queries::{CitiesQuery, DistQuery, SortOrder};
 
-const CITIES_QUERY: &str = "SELECT city AS name, city_ascii AS name_ascii, ST_X(coords) as lat, ST_Y(coords) AS lng, country, iso2, iso3, admin_name, capital, population, id FROM cities";
+const CITIES_QUERY: &str = "SELECT city AS name, city_ascii AS name_ascii, ST_X(coords) as lng, ST_Y(coords) AS lat, country, iso2, iso3, admin_name, capital, population, id FROM cities";
 const COLUMNS: &[&str] = &[
     "city AS name",
     "city_ascii AS name_ascii",
-    "ST_X(coords) as lat",
-    "ST_Y(coords) AS lng",
+    "ST_X(coords) as lng",
+    "ST_Y(coords) AS lat",
     "country",
     "iso2",
     "iso3",
