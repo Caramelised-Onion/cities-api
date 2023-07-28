@@ -77,6 +77,22 @@ pub async fn get_cities(
         bind_vals.push(format!("{}{}", SRID_SPECIFICATION, point));
     }
 
+    if let Some(geometry_in) = query.geometry_in {
+        let p = postgres_query_param(bind_vals.len() + 1);
+        query_conditions.push(format!(
+            "ST_Intersects(coords::geography, ST_GeomFromEWKT({})::geography)", p
+        ));
+        bind_vals.push(format!("{}{}", SRID_SPECIFICATION, geometry_in));
+    }
+
+    if let Some(geometry_out) = query.geometry_out {
+        let p = postgres_query_param(bind_vals.len() + 1);
+        query_conditions.push(format!(
+            "NOT ST_Intersects(coords::geography, ST_GeomFromEWKT({})::geography)", p
+        ));
+        bind_vals.push(format!("{}{}", SRID_SPECIFICATION, geometry_out));
+    }
+
     if query.sort_by_random.is_some() {
         query_order.push("RANDOM()".to_string());
     }
